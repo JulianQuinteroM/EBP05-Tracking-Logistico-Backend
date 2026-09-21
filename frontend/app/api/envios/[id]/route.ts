@@ -13,3 +13,9 @@ export async function PUT(request: NextRequest, context: Context) {
   if (!/^\d+$/.test(id)) return Response.json({ code: 'INVALID_ID', message: 'ID inválido' }, { status: 400 });
   return forwardPrivate(request, `envios/${id}`);
 }
+
+export async function DELETE(request: NextRequest, context: Context) {
+  const { id } = await context.params;
+  if (!/^\d+$/.test(id)) return Response.json({ code: 'INVALID_ID', message: 'ID inválido' }, { status: 400 });
+  return forwardPrivate(request, `envios/${id}`);
+}

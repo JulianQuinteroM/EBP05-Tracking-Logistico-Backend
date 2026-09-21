@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,5 +70,12 @@ public class ShipmentController {
     public ShipmentResponses.ShipmentDetail cancel(@PathVariable Long id,
         @Valid @RequestBody CancelShipmentRequest request, Authentication authentication) {
         return service.cancel(id, request, authentication.getName());
+    }
+
+    @DeleteMapping("/envios/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+        @Valid @RequestBody DeleteShipmentRequest request) {
+        service.delete(id, request);
+        return ResponseEntity.noContent().build();
     }
 }

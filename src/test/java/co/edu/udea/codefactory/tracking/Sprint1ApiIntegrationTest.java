@@ -2,6 +2,7 @@ package co.edu.udea.codefactory.tracking;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,9 +85,10 @@ class Sprint1ApiIntegrationTest {
             .andExpect(status().isConflict());
 
         String cancellation = "{\"version\":" + editedVersion + ",\"reason\":\"Error de registro\"}";
-        mvc.perform(post("/api/envios/" + id + "/cancelacion").with(httpBasic("operador", "testing-password-123456"))
+        String cancelledBody = mvc.perform(post("/api/envios/" + id + "/cancelacion").with(httpBasic("operador", "testing-password-123456"))
                 .contentType(MediaType.APPLICATION_JSON).content(cancellation))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CANCELADO"));
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CANCELADO"))
+            .andReturn().getResponse().getContentAsString();
         mvc.perform(post("/api/envios/" + id + "/cancelacion").with(httpBasic("operador", "testing-password-123456"))
                 .contentType(MediaType.APPLICATION_JSON).content(cancellation))
             .andExpect(status().isConflict());
@@ -94,6 +96,21 @@ class Sprint1ApiIntegrationTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CANCELADO"));
         org.junit.jupiter.api.Assertions.assertEquals(2L, events.countByShipmentId(id));
         org.junit.jupiter.api.Assertions.assertEquals(2L, audits.countByShipmentId(id));
+
+        long cancelledVersion = json.readTree(cancelledBody).get("version").asLong();
+        String deletion = "{\"version\":" + cancelledVersion + "}";
+        mvc.perform(delete("/api/envios/" + id).contentType(MediaType.APPLICATION_JSON).content(deletion))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(delete("/api/envios/" + id).with(httpBasic("operador", "testing-password-123456"))
+                .contentType(MediaType.APPLICATION_JSON).content(deletion))
+            .andExpect(status().isNoContent());
+        mvc.perform(get("/api/seguimiento/" + code)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/envios/" + id).with(httpBasic("operador", "testing-password-123456")))
+            .andExpect(status().isNotFound());
+        mvc.perform(get("/api/envios").with(httpBasic("operador", "testing-password-123456")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        org.junit.jupiter.api.Assertions.assertEquals(0L, events.countByShipmentId(id));
+        org.junit.jupiter.api.Assertions.assertEquals(0L, audits.countByShipmentId(id));
     }
 
     @Test void invalidInputAndForgedFieldsAreRejected() throws Exception {

@@ -30,7 +30,7 @@ try {
 
     Push-Location -LiteralPath $projectDirectory
     try {
-        & npm.cmd run dev -- --hostname 127.0.0.1
+        & npm.cmd run dev -- --hostname localhost
         if ($LASTEXITCODE -ne 0) { throw "Next.js terminó con código $LASTEXITCODE" }
     } finally {
         Pop-Location

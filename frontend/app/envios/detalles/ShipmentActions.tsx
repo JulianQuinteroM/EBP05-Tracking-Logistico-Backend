@@ -17,11 +17,14 @@ const fields: { key: keyof ShipmentInput; label: string; type: string }[] = [
   { key: 'destinationCity', label: 'Ciudad destino', type: 'text' },
 ];
 
-export default function ShipmentActions({ detail, initialAction }: { detail: ShipmentDetail; initialAction: 'editar' | 'cancelar' | null }) {
+type Action = 'editar' | 'cancelar' | 'eliminar';
+
+export default function ShipmentActions({ detail, initialAction }: { detail: ShipmentDetail; initialAction: Action | null }) {
   const router = useRouter();
-  const [action, setAction] = useState<'editar' | 'cancelar' | null>(initialAction);
+  const [action, setAction] = useState<Action | null>(initialAction);
   const [form, setForm] = useState<ShipmentInput>(detail.shipment);
   const [reason, setReason] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
@@ -70,6 +73,32 @@ export default function ShipmentActions({ detail, initialAction }: { detail: Shi
     } finally { setPending(false); }
   }
 
+  async function remove(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (deleteConfirmation.trim().toUpperCase() !== detail.trackingCode) {
+      setError(`Escribe exactamente ${detail.trackingCode} para confirmar.`);
+      return;
+    }
+    if (!window.confirm(`¿Eliminar permanentemente ${detail.trackingCode}? Esta acción no se puede deshacer.`)) return;
+    setError(''); setMessage(''); setPending(true);
+    try {
+      const response = await fetch(`/api/envios/${detail.id}`, {
+        method: 'DELETE', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ version: detail.version }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(response.status === 409
+          ? 'La ficha cambió. Recárgala antes de eliminar.'
+          : response.status === 404 ? 'El envío ya no existe.' : data.message || 'No se pudo eliminar');
+      }
+      router.replace('/historial-operativo');
+      router.refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'No se pudo eliminar');
+    } finally { setPending(false); }
+  }
+
   return <section className="rounded-xl bg-white p-5 shadow-sm">
     <div className="flex flex-wrap items-center gap-3">
       {detail.status === 'PENDIENTE_RECOGIDA' && <>
@@ -77,6 +106,7 @@ export default function ShipmentActions({ detail, initialAction }: { detail: Shi
         <button onClick={() => { setAction('cancelar'); setError(''); }} className="rounded bg-red-700 px-4 py-2 font-semibold text-white">Cancelar envío</button>
       </>}
       {detail.status !== 'PENDIENTE_RECOGIDA' && <p className="text-sm text-gray-600">Este envío ya no admite edición ni cancelación.</p>}
+      <button onClick={() => { setAction('eliminar'); setError(''); setMessage(''); }} className="rounded border border-red-800 px-4 py-2 font-semibold text-red-800">Eliminar permanentemente</button>
     </div>
     {action === 'editar' && detail.status === 'PENDIENTE_RECOGIDA' && <form onSubmit={update} className="mt-6 space-y-4">
       <h2 className="font-bold text-purple-900">Editar datos del envío</h2>
@@ -104,6 +134,14 @@ export default function ShipmentActions({ detail, initialAction }: { detail: Shi
         <textarea required value={reason} onChange={event => setReason(event.target.value)} className="mt-1 w-full rounded border p-3 text-gray-900" />
       </label>
       <div className="flex gap-2"><button disabled={pending} className="rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50">{pending ? 'Cancelando...' : 'Confirmar cancelación'}</button><button type="button" onClick={() => setAction(null)} className="rounded border px-4 py-2">Volver</button></div>
+    </form>}
+    {action === 'eliminar' && <form onSubmit={remove} className="mt-6 space-y-3 rounded border border-red-300 bg-red-50 p-4">
+      <h2 className="font-bold text-red-900">Eliminar permanentemente el envío</h2>
+      <p className="text-sm text-red-800">Se borrarán el envío, sus movimientos y su auditoría. Dejará de aparecer en la lista y el código ya no podrá consultarse. Esta acción no se puede deshacer.</p>
+      <label className="block text-sm font-medium text-red-900">Escribe <strong>{detail.trackingCode}</strong> para confirmar
+        <InputBase required autoComplete="off" value={deleteConfirmation} onChange={event => setDeleteConfirmation(event.target.value)} className="mt-1" />
+      </label>
+      <div className="flex gap-2"><button disabled={pending || deleteConfirmation.trim().toUpperCase() !== detail.trackingCode} className="rounded bg-red-900 px-4 py-2 text-white disabled:opacity-50">{pending ? 'Eliminando...' : 'Eliminar definitivamente'}</button><button type="button" onClick={() => setAction(null)} className="rounded border bg-white px-4 py-2">Volver</button></div>
     </form>}
     {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
     {message && <p role="status" className="mt-4 text-sm text-green-700">{message}</p>}

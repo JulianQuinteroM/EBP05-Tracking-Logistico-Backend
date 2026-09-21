@@ -1,6 +1,6 @@
 # Tracking logístico — Sprint 1 (backend y front)
 
-Este repositorio reúne temporalmente el backend Spring Boot en la raíz y el front Next.js en `frontend/` para las HU001-HU005: registrar, buscar por código, listar, editar y cancelar envíos. La integración se probó localmente; **subir código a GitHub no despliega la aplicación ni la base de datos**. Antes de devolver el front a su repositorio original, hay que comparar los cambios actuales del equipo de front para no sobrescribirlos. Las HU acordadas están en el entregable de revisión del proyecto.
+Este repositorio reúne temporalmente el backend Spring Boot en la raíz y el front Next.js en `frontend/` para las HU001-HU005: registrar, buscar por código, listar, editar y cancelar envíos. También incluye la extensión acordada de eliminación permanente. La integración se probó localmente; **subir código a GitHub no despliega la aplicación ni la base de datos**. Antes de devolver el front a su repositorio original, hay que comparar los cambios actuales del equipo de front para no sobrescribirlos. Las HU acordadas están en el entregable de revisión del proyecto.
 
 ## Tecnologías
 
@@ -24,7 +24,7 @@ Sin PostgreSQL local no se puede hacer una prueba de arranque contra la base def
 - `PROGRAMADO` fija una fecha futura de **entrega**, nunca fecha de recolección.
 - Costos informativos provisionales: Estándar $10.000 COP (hasta 5 días), Exprés $25.000 COP (hasta 2 días), Programado $15.000 COP (fecha elegida). No se cobra ni se promete una tarifa real.
 - Código `LOG-########-D`, con D de Luhn sobre las ocho cifras. Es único e inmutable.
-- Estado inicial `PENDIENTE_RECOGIDA`. Solo en ese estado se permite editar o cancelar. Cancelar pasa a `CANCELADO` y conserva el registro, eventos y código.
+- Estado inicial `PENDIENTE_RECOGIDA`. Solo en ese estado se permite editar o cancelar. Cancelar pasa a `CANCELADO` y conserva el registro, eventos y código. Eliminar permanentemente es una acción separada, exige confirmación y borra el envío y sus registros dependientes.
 - El seguimiento público no devuelve nombres, teléfonos, correos, dirección, auditoría ni ID interno. La ficha completa se consulta por un endpoint interno autorizado.
 - Las ediciones/cancelaciones requieren la versión leída en la ficha. Un cambio concurrente devuelve HTTP 409.
 

@@ -138,4 +138,27 @@ class ShipmentServiceTest {
         assertThrows(ShipmentConflictException.class,
             () -> service.cancel(7L, new CancelShipmentRequest(1L, "Otra vez"), "operador"));
     }
+
+    @Test void deleteRemovesDependentsAndShipmentWhenVersionMatches() {
+        Shipment s = pending();
+        when(shipments.findById(7L)).thenReturn(Optional.of(s));
+
+        service.delete(7L, new DeleteShipmentRequest(0L));
+
+        verify(audits).deleteAllByShipmentId(7L);
+        verify(events).deleteAllByShipmentId(7L);
+        verify(shipments).delete(s);
+    }
+
+    @Test void deleteRejectsStaleVersionWithoutRemovingAnything() {
+        Shipment s = pending();
+        when(shipments.findById(7L)).thenReturn(Optional.of(s));
+
+        assertThrows(ShipmentConflictException.class,
+            () -> service.delete(7L, new DeleteShipmentRequest(3L)));
+
+        verify(audits, never()).deleteAllByShipmentId(any());
+        verify(events, never()).deleteAllByShipmentId(any());
+        verify(shipments, never()).delete(any(Shipment.class));
+    }
 }

@@ -11,6 +11,9 @@ Base local: `http://localhost:8080/api`. Respuestas JSON UTF-8. Los errores usan
 | HU003 | `GET /envios/{id}` | Operador | ficha privada e historial logístico |
 | HU005 | `PUT /envios/{id}` | Operador | ficha actualizada o HTTP 409 |
 | HU004 | `POST /envios/{id}/cancelacion` | Operador | ficha en CANCELADO o HTTP 409 |
+| Extensión | `DELETE /envios/{id}` | Operador | eliminación física completa o HTTP 409 |
+
+> La eliminación permanente es una extensión posterior al alcance original HU001-HU005. No equivale a cancelar: borra también los eventos y auditorías del envío.
 
 ## Crear envío
 

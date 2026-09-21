@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { requestHasSession } from './session';
+import { requestHasSameOrigin } from './origin';
 
 function backendUrl(path: string) {
   const base = process.env.BACKEND_URL || 'http://localhost:8080';
@@ -16,16 +17,11 @@ function unavailable(message: string) {
   return Response.json({ code: 'FRONT_CONFIGURATION', message }, { status: 503 });
 }
 
-function sameOrigin(request: NextRequest) {
-  const origin = request.headers.get('origin');
-  return !origin || origin === new URL(request.url).origin;
-}
-
 async function forward(request: NextRequest, path: string, isPrivate: boolean) {
   if (isPrivate && !requestHasSession(request)) {
     return Response.json({ code: 'LOGIN_REQUIRED', message: 'Ingresa como operador para continuar' }, { status: 401 });
   }
-  if (!sameOrigin(request)) {
+  if (!requestHasSameOrigin(request)) {
     return Response.json({ code: 'ORIGIN_REJECTED', message: 'Origen no permitido' }, { status: 403 });
   }
   const auth = isPrivate ? operatorAuthorization() : null;
@@ -55,6 +51,9 @@ async function forward(request: NextRequest, path: string, isPrivate: boolean) {
       return Response.json({ code: 'BACKEND_AUTH_FAILED', message: 'El front no tiene la misma contraseña de operador que el backend. Reinicia el front con la contraseña correcta.' }, { status: 503 });
     }
     const responseBody = await upstream.text();
+    if (upstream.status === 204) {
+      return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    }
     if (!upstream.headers.get('content-type')?.includes('application/json') && !upstream.ok) {
       return Response.json({ code: 'BACKEND_ERROR', message: 'El backend no pudo procesar la solicitud' }, { status: upstream.status });
     }

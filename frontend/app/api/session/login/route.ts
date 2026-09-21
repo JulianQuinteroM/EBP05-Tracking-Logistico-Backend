@@ -1,10 +1,10 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { requestHasSameOrigin } from '@/lib/origin';
 import { createSessionToken, SESSION_COOKIE, sessionConfigured, sessionCookieOptions } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
-  const origin = request.headers.get('origin');
-  if (origin && origin !== request.nextUrl.origin) {
+  if (!requestHasSameOrigin(request)) {
     return NextResponse.json({ code: 'ORIGIN_REJECTED', message: 'Origen no permitido' }, { status: 403 });
   }
   if (!request.headers.get('content-type')?.startsWith('application/json')) {

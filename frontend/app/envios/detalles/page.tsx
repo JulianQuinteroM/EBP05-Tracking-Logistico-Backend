@@ -54,7 +54,7 @@ export default async function ShipmentDetailsPage({ searchParams }: {
     <Card title="Historial de movimientos">
       {detail.events.length ? <ol className="space-y-3">{detail.events.map((event, index) => <li key={`${event.occurredAt}-${index}`} className="border-l-2 border-purple-400 pl-3"><p className="font-medium">{event.description}</p><p className="text-sm text-gray-500">{displayDate(event.occurredAt)}</p></li>)}</ol> : <p>No hay movimientos registrados.</p>}
     </Card>
-    <ShipmentActions key={`${detail.id}-${detail.version}`} detail={detail} initialAction={accion === 'editar' || accion === 'cancelar' ? accion : null} />
+    <ShipmentActions key={`${detail.id}-${detail.version}`} detail={detail} initialAction={accion === 'editar' || accion === 'cancelar' || accion === 'eliminar' ? accion : null} />
     <p className="text-xs text-gray-500">Sprint 1 no registra dimensiones ni dirección de origen; por eso no se muestran aquí.</p>
   </main>;
 }

@@ -140,9 +140,23 @@ public class ShipmentService {
         return detail(shipment);
     }
 
+    @Transactional
+    public void delete(Long id, DeleteShipmentRequest request) {
+        Shipment shipment = shipments.findById(id).orElseThrow(ShipmentNotFoundException::new);
+        requireVersion(shipment, request.version());
+        audits.deleteAllByShipmentId(id);
+        events.deleteAllByShipmentId(id);
+        shipments.delete(shipment);
+        entityManager.flush();
+    }
+
     private void requirePendingAndVersion(Shipment shipment, Long expectedVersion) {
         if (shipment.status != ShipmentStatus.PENDIENTE_RECOGIDA)
             throw new ShipmentConflictException("El envío ya no está pendiente de recogida");
+        requireVersion(shipment, expectedVersion);
+    }
+
+    private void requireVersion(Shipment shipment, Long expectedVersion) {
         if (!Objects.equals(shipment.version, expectedVersion))
             throw new ShipmentConflictException("El envío cambió; recargue la ficha antes de continuar");
     }
