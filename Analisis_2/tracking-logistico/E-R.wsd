@@ -1,0 +1,86 @@
+@startuml ER_Sistema_Envios
+
+' Configuración de estilo ER
+hide circle
+skinparam linetype ortho
+
+entity "Cliente" as cliente {
+  * id : Long <<PK>>
+  --
+  nombre : String
+  telefono : String
+  email : String
+  tipo_documento : String
+  numero_documento : String
+  id_direccion : Long <<FK>>
+}
+
+entity "Direccion" as direccion {
+  * id : Long <<PK>>
+  --
+  direccion : String
+  ciudad : String
+  codigo_postal : String
+}
+
+entity "HUB" as hub {
+  * id : Long <<PK>>
+  --
+  nombre : String
+  codigo_sucursal : String
+  direccion_id : Long <<FK>>
+}
+
+entity "PersonalLogistico" as personal {
+  * id : Long <<PK>>
+  --
+  nombre : String
+  rol : String
+  hub_id : Long <<FK>>
+}
+
+entity "Envio" as envio {
+  * id : Long <<PK>>
+  --
+  tracking_number : String <<UNIQUE>>
+  prioridad : String
+  peso : Double
+  dimensiones : String
+  costo : BigDecimal
+  fecha_creacion : LocalDateTime
+  fecha_estimada_entrega : LocalDateTime
+  estado_operativo_actual : String
+  id_remitente : Long <<FK>>
+  id_destinatario : Long <<FK>>
+  id_direccion_origen : Long <<FK>>
+  id_direccion_destino : Long <<FK>>
+  id_empleado_creador : Long <<FK>>
+}
+
+entity "Evento" as evento {
+  * id : Long <<PK>>
+  --
+  fecha_hora : LocalDateTime
+  estado_operativo : String
+  observacion : String
+  id_envio : Long <<FK>>
+  id_empleado : Long <<FK>>
+  hub_id : Long <<FK>>
+}
+
+' Relaciones de Cardinalidad (Crow's Foot)
+cliente }|..|| direccion : "direccion_id"
+hub }|..|| direccion : "direccion_id"
+personal }|..|| hub : "hub_id"
+
+envio }|..|| cliente : "id_remitente"
+envio }|..|| cliente : "id_destinatario"
+envio }|..|| direccion : "id_direccion_origen"
+envio }|..|| direccion : "id_direccion_destino"
+envio }|..|| personal : "id_empleado_creador"
+
+envio ||..|{ evento : "id_envio (Composición)"
+evento }|..|| personal : "id_empleado"
+evento }|..|| hub : "hub_id"
+
+@enduml

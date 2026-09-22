@@ -1,0 +1,269 @@
+@startuml Diagrama_Clases_Sprint1_FedEx
+
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "Capa de Dominio (Entities)" {
+    class Envio {
+        - Long id
+        - String trackingNumber
+        - TipoPrioridad prioridad
+        - Double peso
+        - String dimensiones
+        - BigDecimal costo
+        - LocalDateTime fechaRegistro
+        - LocalDateTime fechaEstimadaEntrega
+        - EstadoEnvio estadoOperativo
+        - Cliente remitente
+        - Cliente destinatario
+        - Direccion direccionOrigen
+        - Direccion direccionDestino
+        - PersonalLogistico operadorCreador
+        + void calcularCosto()
+        + void calcularFechaEstimada()
+        + Boolean esEliminable()
+    }
+
+    class Cliente {
+        - Long id
+        - String nombre
+        - String telefono
+        - String email
+        - String tipoDocumento
+        - String numeroDocumento
+    }
+
+    class Direccion {
+        - Long id
+        - String calle
+        - String numero
+        - String ciudad
+        - String departamentoProvincia
+        - String codigoPostal
+        - String pais
+    }
+
+    class PersonalLogistico {
+        - Long id
+        - String nombre
+        - String emailCorporativo
+        - RolPersonal rol
+    }
+
+    class RegistroAuditoria {
+        - Long id
+        - Long envioId
+        - String usuarioModificador
+        - String camposModificados
+        - LocalDateTime fechaHora
+    }
+
+    class MovimientoEnvio {
+        - Long id
+        - EstadoEnvio estado
+        - String descripcion
+        - String ubicacion
+        - LocalDateTime fechaHora
+        - Envio envio
+    }
+
+    class TrackingNumberSequence {
+        - Long id
+    }
+
+    enum TipoPrioridad {
+        ESTANDAR
+        EXPRES
+        PROGRAMADO
+    }
+
+    enum EstadoEnvio {
+        PENDIENTE_RECOGIDA
+        CANCELADO
+        EN_TRANSITO
+        ENTREGADO
+    }
+
+    enum RolPersonal {
+        OPERADOR
+        SUPERVISOR
+        ADMINISTRADOR
+    }
+}
+
+package "Capa de DTOs (Requests)" {
+    class CrearEnvioDTO {
+        - Long idRemitente
+        - Long idDestinatario
+        - Long idDireccionOrigen
+        - Long idDireccionDestino
+        - TipoPrioridad prioridad
+        - Double peso
+        - String dimensiones
+        - String fechaEstimadaEntrega
+    }
+
+    class ActualizarEnvioDTO {
+        - Long idRemitente
+        - Long idDestinatario
+        - Long idDireccionOrigen
+        - Long idDireccionDestino
+        - TipoPrioridad prioridad
+        - Double peso
+        - String dimensiones
+    }
+
+    class FiltroEnvioDTO {
+        - String textoBusqueda
+        - EstadoEnvio estado
+        - TipoPrioridad tipo
+        - LocalDateTime fechaInicio
+        - LocalDateTime fechaFin
+    }
+}
+
+package "Capa de DTOs (Responses)" {
+    class EnvioDetalleDTO {
+        - Long id
+        - String trackingNumber
+        - TipoPrioridad prioridad
+        - Double peso
+        - String dimensiones
+        - BigDecimal costo
+        - LocalDateTime fechaRegistro
+        - LocalDateTime fechaEstimadaEntrega
+        - EstadoEnvio estadoOperativo
+        - Long idRemitente
+        - String nombreRemitente
+        - String telefonoRemitente
+        - String emailRemitente
+        - DireccionDTO direccionOrigen
+        - Long idDestinatario
+        - String nombreDestinatario
+        - String telefonoDestinatario
+        - String emailDestinatario
+        - DireccionDTO direccionDestino
+        - List<MovimientoEnvioDTO> historialMovimientos
+        - String ubicacionActual
+    }
+
+    class DireccionDTO {
+        - Long id
+        - String calle
+        - String numero
+        - String ciudad
+        - String departamentoProvincia
+        - String codigoPostal
+        - String pais
+        + DireccionDTO from(Direccion direccion)
+    }
+
+    class MovimientoEnvioDTO {
+        - Long id
+        - EstadoEnvio estado
+        - String descripcion
+        - String ubicacion
+        - LocalDateTime fechaHora
+    }
+
+    class RespuestaPaginadaDTO {
+        - List contenido
+        - int numeroPagina
+        - int tamanoPagina
+        - long totalElementos
+        - int totalPaginas
+        - boolean ultima
+    }
+}
+
+package "Capa de Repositorios (Persistence)" {
+    interface EnvioRepository {
+        + Optional<Envio> findByTrackingNumberIgnoreCase(String trackingNumber)
+        + Boolean existsByTrackingNumberIgnoreCase(String trackingNumber)
+        + Page<Envio> findAll(Specification specification, Pageable pageable)
+    }
+
+    interface ClienteRepository
+    interface DireccionRepository
+    interface PersonalLogisticoRepository
+    interface AuditoriaRepository
+    interface MovimientoEnvioRepository {
+        + List<MovimientoEnvio> findByEnvioIdOrderByFechaHoraAsc(Long envioId)
+    }
+
+    interface TrackingNumberSequenceRepository {
+        + TrackingNumberSequence save(TrackingNumberSequence sequence)
+    }
+}
+
+package "Capa de Lógica de Negocio (Services)" {
+    interface IEnvioService {
+        + EnvioDetalleDTO crearEnvio(CrearEnvioDTO dto, Long operadorId)
+        + EnvioDetalleDTO rastrearPorTrackingNumber(String codigo)
+        + EnvioDetalleDTO obtenerEnvio(Long id)
+        + List<MovimientoEnvioDTO> listarMovimientos(Long id)
+        + RespuestaPaginadaDTO listarEnvios(FiltroEnvioDTO filtro, Pageable pageable)
+        + EnvioDetalleDTO actualizarEnvio(Long id, ActualizarEnvioDTO dto, String usuario)
+        + void eliminarEnvio(Long id, String usuario)
+        + byte[] exportarEnviosExcel(FiltroEnvioDTO filtro)
+    }
+
+    class EnvioServiceImpl implements IEnvioService {
+        - EnvioRepository envioRepository
+        - ClienteRepository clienteRepository
+        - DireccionRepository direccionRepository
+        - PersonalLogisticoRepository personalLogisticoRepository
+        - AuditoriaRepository auditoriaRepository
+        - MovimientoEnvioRepository movimientoRepository
+        - TrackingNumberSequenceRepository trackingSequenceRepository
+        - TrackingNumberGenerator trackingGenerator
+        - String nextTrackingNumber()
+        - void registrarMovimiento(Envio envio, EstadoEnvio estado, String descripcion, String ubicacion)
+    }
+
+    class TrackingNumberGenerator {
+        + static String generarCodigo(long consecutivo)
+        + Boolean validarFormato(String codigo)
+        + String normalizarCodigo(String codigo)
+    }
+}
+
+package "Capa de Presentación (REST Controllers)" {
+    class EnvioController {
+        - IEnvioService envioService
+        + ResponseEntity<EnvioDetalleDTO> crearEnvio(CrearEnvioDTO dto, Long operadorId)
+        + ResponseEntity<EnvioDetalleDTO> buscarPorCodigo(String codigo)
+        + ResponseEntity<EnvioDetalleDTO> obtenerEnvio(Long id)
+        + ResponseEntity<List<MovimientoEnvioDTO>> listarMovimientos(Long id)
+        + ResponseEntity listarEnvios(FiltroEnvioDTO filtro, Pageable pageable)
+        + ResponseEntity<EnvioDetalleDTO> actualizarEnvio(Long id, ActualizarEnvioDTO dto, String usuario)
+        + ResponseEntity<Void> eliminarEnvio(Long id, String usuario)
+        + ResponseEntity<byte[]> exportarReporte(FiltroEnvioDTO filtro)
+    }
+}
+
+' Relaciones de dominio
+Envio "1" --> "1" Cliente : remitente
+Envio "1" --> "1" Cliente : destinatario
+Envio "1" --> "1" Direccion : direccionOrigen
+Envio "1" --> "1" Direccion : direccionDestino
+Envio "1" --> "1" PersonalLogistico : operadorCreador
+MovimientoEnvio "*" --> "1" Envio
+
+' Relaciones DTO
+EnvioDetalleDTO --> DireccionDTO
+EnvioDetalleDTO --> MovimientoEnvioDTO
+MovimientoEnvioDTO --> EstadoEnvio
+
+' Inyección de dependencias
+EnvioController --> IEnvioService
+EnvioServiceImpl --> EnvioRepository
+EnvioServiceImpl --> ClienteRepository
+EnvioServiceImpl --> DireccionRepository
+EnvioServiceImpl --> PersonalLogisticoRepository
+EnvioServiceImpl --> AuditoriaRepository
+EnvioServiceImpl --> MovimientoEnvioRepository
+EnvioServiceImpl --> TrackingNumberSequenceRepository
+EnvioServiceImpl --> TrackingNumberGenerator
+
+@enduml
