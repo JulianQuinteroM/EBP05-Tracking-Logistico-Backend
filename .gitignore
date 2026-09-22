@@ -1,8 +1,0 @@
-/target/
-/.m2/
-/.mvn/settings.xml
-/.idea/
-/.vscode/
-*.iml
-.env
-*.log
