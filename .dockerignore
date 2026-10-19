@@ -1,0 +1,10 @@
+.git
+.m2
+.mvn
+target
+frontend
+docs
+scripts
+.env*
+**/.env*
+**/*.log

@@ -1,0 +1,9 @@
+/target/
+/.m2/
+/.mvn/settings.xml
+/.idea/
+/.vscode/
+*.iml
+.env*
+!.env.example
+*.log
