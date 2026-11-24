@@ -33,4 +33,21 @@ class GeminiClientTest {
         var client=new GeminiClient("test-only-key","test-model",json,builder.build());
         assertThrows(GeminiClient.Unavailable.class,()->client.analyze(Map.of("caseText","Prueba")));server.verify();
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"400,API_KEY_INVALID,clave de API","403,API_KEY_SERVICE_BLOCKED,denegó el acceso","404,NOT_FOUND,modelo configurado","503,UNAVAILABLE,temporalmente"})
+    void distinguishesProviderErrorsWithoutExposingResponseBody(int status,String reason,String expected) {
+        var builder=RestClient.builder().baseUrl("https://generativelanguage.googleapis.com/v1beta");var server=MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/test-model:generateContent")).andRespond(withStatus(HttpStatus.valueOf(status))
+            .contentType(MediaType.APPLICATION_JSON).body("{\"error\":{\"status\":\"UNKNOWN\",\"message\":\"private complaint text test-only-key\",\"details\":[{\"reason\":\""+reason+"\"}]}}"));
+        var client=new GeminiClient("test-only-key","test-model",json,builder.build());
+        var error=assertThrows(GeminiClient.Unavailable.class,()->client.analyze(Map.of("caseText","Private complaint")));
+        assertTrue(error.getMessage().contains(expected));assertTrue(error.getMessage().contains(String.valueOf(status)));assertFalse(error.getMessage().contains("test-only-key"));assertFalse(error.getMessage().contains("private complaint"));server.verify();
+    }
+    @Test void distinguishesConnectionTimeout() {
+        var builder=RestClient.builder().baseUrl("https://generativelanguage.googleapis.com/v1beta");var server=MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/test-model:generateContent")).andRespond(withException(new java.net.SocketTimeoutException("private test-only-key")));
+        var client=new GeminiClient("test-only-key","test-model",json,builder.build());
+        var error=assertThrows(GeminiClient.Unavailable.class,()->client.analyze(Map.of("caseText","Private complaint")));
+        assertTrue(error.getMessage().contains("45 segundos"));assertFalse(error.getMessage().contains("test-only-key"));server.verify();
+    }
 }
