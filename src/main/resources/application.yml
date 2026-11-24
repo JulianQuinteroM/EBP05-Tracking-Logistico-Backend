@@ -17,6 +17,9 @@ server:
   error:
     include-message: never
 app:
+  ai:
+    key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
   security:
     operator-username: ${OPERATOR_USERNAME:}
     operator-password: ${OPERATOR_PASSWORD:}

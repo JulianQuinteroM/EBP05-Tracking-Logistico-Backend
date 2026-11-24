@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(GeminiClient.Unavailable.class)
+    ResponseEntity<ApiError> ai(GeminiClient.Unavailable e) { return ResponseEntity.status(503).body(new ApiError("AI_UNAVAILABLE",e.getMessage(),Map.of())); }
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    ResponseEntity<ApiError> credentials() { return ResponseEntity.status(401).body(new ApiError("INVALID_CREDENTIALS","Usuario o contraseña incorrectos",Map.of())); }
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    ResponseEntity<ApiError> duplicate() { return ResponseEntity.status(409).body(new ApiError("DATA_CONFLICT","Registro duplicado o datos relacionados no válidos",Map.of())); }
     public record ApiError(String code, String message, Map<String, String> fields) {}
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

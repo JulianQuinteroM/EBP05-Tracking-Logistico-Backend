@@ -1,4 +1,14 @@
-# LogiFlow — seguimiento logístico, sprint 2
+# LogiFlow — seguimiento logístico, sprint 3 local
+
+La entrega actual se desarrolla en `codex/sprint3-local`, sin publicar en GitHub. Incluye las 15 HUs del sprint 3, contactos, usuarios persistentes/permisos, entregas con evidencia, intentos fallidos, resolución de incidencias, reportes reales, reclamaciones y asistente Gemini con revisión humana.
+
+**Para ejecutar esta versión usa [INICIAR_SPRINT3_LOCAL.md](docs/INICIAR_SPRINT3_LOCAL.md).** El frontend ya no solicita contraseñas de las cuentas al arrancar. Consulta [SPRINT3_CRITERIOS.md](docs/SPRINT3_CRITERIOS.md) y [API_SPRINT3.md](docs/API_SPRINT3.md). La llamada real a Gemini requiere configurar la clave privada del equipo.
+
+---
+
+## Referencia histórica del sprint 2
+
+Las instrucciones siguientes documentan la entrega anterior. Para sprint 3 prevalecen la guía y el contrato enlazados arriba.
 
 El proyecto conserva el backend original Spring Boot y el frontend Next.js en `frontend/`. El ZIP nuevo del equipo de front se tomó como referencia visual; las pantallas de este repositorio consultan la API real y no los datos simulados del ZIP.
 

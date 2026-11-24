@@ -21,7 +21,7 @@ function positiveDecimal(value: FormDataEntryValue | null, label: string, max: n
   return parsed;
 }
 
-export default function ShipmentActions({ detail, initialAction, canWrite }: { detail: ShipmentDetail; initialAction: Action | null; canWrite: boolean }) {
+export default function ShipmentActions({ detail, initialAction, canWrite, permissions }: { detail: ShipmentDetail; initialAction: Action | null; canWrite: boolean; permissions: string[] }) {
   const router = useRouter();
   const [action, setAction] = useState<Action | null>(initialAction);
   const [packaging, setPackaging] = useState<PackagingType>(detail.shipment.packagingType);
@@ -88,15 +88,15 @@ export default function ShipmentActions({ detail, initialAction, canWrite }: { d
     if (!window.confirm(`¿Cancelar ${detail.trackingCode}? El envío permanecerá en el historial.`)) return;
     void send(`/api/envios/${detail.id}/cancelacion`, { version: detail.version, reason: reason.trim() }, 'Envío cancelado');
   }
-  const editable = detail.status === 'PENDIENTE_RECOGIDA' || detail.status === 'RECOGIDO';
-  const locatable = !['PENDIENTE_RECOGIDA', 'ENTREGADO', 'CANCELADO'].includes(detail.status);
+  const editable = permissions.includes('ENVIO_EDITAR') && (detail.status === 'PENDIENTE_RECOGIDA' || detail.status === 'RECOGIDO');
+  const locatable = permissions.includes('ENVIO_ESTADO') && !['PENDIENTE_RECOGIDA', 'ENTREGADO', 'CANCELADO'].includes(detail.status);
   return <section className="app-panel p-6">
     <h2 className="mb-4 text-lg font-bold text-white">Acciones del envío</h2>
     {!canWrite ? <p className="text-sm text-slate-400">La cuenta de consulta solo puede ver los datos.</p> : <div className="flex flex-wrap gap-2">
       {editable && <button onClick={() => { setAction('editar'); setError(''); }} className="app-btn app-btn-secondary">Editar datos</button>}
       {detail.allowedStatusTransitions.length > 0 && <button onClick={() => { setAction('estado'); setError(''); }} className="app-btn app-btn-primary">Actualizar estado</button>}
       {locatable && <button onClick={() => { setAction('ubicacion'); setError(''); }} className="app-btn app-btn-secondary">Registrar ubicación</button>}
-      {detail.status === 'PENDIENTE_RECOGIDA' && <button onClick={() => { setAction('cancelar'); setError(''); }} className="app-btn app-btn-danger">Cancelar envío</button>}
+      {permissions.includes('ENVIO_EDITAR') && detail.status === 'PENDIENTE_RECOGIDA' && <button onClick={() => { setAction('cancelar'); setError(''); }} className="app-btn app-btn-danger">Cancelar envío</button>}
       {!editable && !locatable && !detail.allowedStatusTransitions.length && <p className="text-sm text-slate-400">Este envío ya no admite modificaciones.</p>}
     </div>}
     {canWrite && action === 'editar' && editable && <form onSubmit={edit} className="mt-6 space-y-5 border-t border-slate-700 pt-5">

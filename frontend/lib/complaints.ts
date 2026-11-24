@@ -1,0 +1,4 @@
+export const complaintStates: Record<string, string> = { ABIERTA: 'Abierta', EN_REVISION: 'En revisión', RESUELTA: 'Resuelta', CERRADA: 'Cerrada' };
+export const categories: Record<string, string> = { RETRASO: 'Retraso', DANO: 'Daño del paquete', ENTREGA: 'Problema con la entrega', ATENCION: 'Atención recibida', OTRO: 'Otro' };
+export type AiResult = { summary: string; priority: string; findings: { eventId: number; observation: string }[]; actions: string[]; missingInfo: string[]; draftReply: string };
+export type Complaint = { id: string; codigo_seguimiento: string; envio_id?: number; categoria: string; asunto: string; descripcion: string; estado: string; responsable?: string | null; version: number; creado_en: string; actualizado_en: string; messages: { id: number; autor: string; texto: string; ocurrido_en: string }[]; analyses?: { id: number; modelo: string; resultado: string; actor: string; ocurrido_en: string }[] };

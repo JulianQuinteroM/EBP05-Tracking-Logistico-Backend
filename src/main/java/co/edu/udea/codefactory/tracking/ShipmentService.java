@@ -28,11 +28,12 @@ public class ShipmentService {
     private final Clock clock;
     private final ObjectMapper json;
     private final EntityManager entityManager;
+    private final ContactRegistry contacts;
 
     public ShipmentService(ShipmentRepository shipments, ShipmentEventRepository events,
                            ShipmentAuditRepository audits, TrackingSequence sequence,
                            ServiceEstimate estimates, Clock clock, ObjectMapper json,
-                           EntityManager entityManager) {
+                           EntityManager entityManager, ContactRegistry contacts) {
         this.shipments = shipments;
         this.events = events;
         this.audits = audits;
@@ -41,6 +42,7 @@ public class ShipmentService {
         this.clock = clock;
         this.json = json;
         this.entityManager = entityManager;
+        this.contacts = contacts;
     }
 
     @Transactional
@@ -188,6 +190,8 @@ public class ShipmentService {
         requireVersion(shipment, request.version());
         if (!ShipmentStatusPolicy.allowed(shipment).contains(request.status()))
             throw new InvalidStatusTransitionException();
+        if(request.status()==ShipmentStatus.ENTREGADO) throw new BusinessException("Usa Confirmar entrega y adjunta una evidencia");
+        if(shipment.status==ShipmentStatus.INCIDENCIA) throw new BusinessException("Usa Resolver incidencia e indica la solución aplicada");
         if (request.status() == ShipmentStatus.INCIDENCIA
             && (request.reason() == null || request.reason().strip().length() < 10))
             throw new BusinessException("Describe el motivo de la incidencia (10 a 250 caracteres)");
@@ -249,6 +253,8 @@ public class ShipmentService {
         s.recipientName = in.recipientName().strip();
         s.recipientPhone = in.recipientPhone().strip();
         s.recipientEmail = in.recipientEmail().strip();
+        s.senderContactId = contacts.resolve(s.senderName,s.senderPhone,s.senderEmail);
+        s.recipientContactId = contacts.resolve(s.recipientName,s.recipientPhone,s.recipientEmail);
         s.destinationStreet = in.destinationStreet().strip();
         s.destinationNumber = in.destinationNumber().strip();
         s.destinationCity = in.destinationCity().strip();

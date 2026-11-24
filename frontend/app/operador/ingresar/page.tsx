@@ -36,10 +36,10 @@ export default function OperatorLoginPage() {
 
   return <main className="app-panel mx-auto max-w-md p-8">
     <h1 className="mb-2 text-2xl font-bold text-white">Ingreso al panel</h1>
-    <p className="mb-6 text-sm text-slate-400">Usa la cuenta configurada al iniciar el backend y el frontend. La contraseña no se guarda en el navegador.</p>
+    <p className="mb-6 text-sm text-slate-400">Ingresa con tu cuenta. El administrador gestiona usuarios, roles y permisos.</p>
     <form onSubmit={submit} className="space-y-4">
       <label className="app-label">Usuario
-        <select value={username} onChange={event => setUsername(event.target.value)} className="app-field mt-1"><option value="operador">operador</option><option value="administrador">administrador</option><option value="consulta">consulta</option></select>
+        <input value={username} onChange={event => setUsername(event.target.value)} autoComplete="username" required className="app-field mt-1" />
       </label>
       <label className="app-label">Contraseña
         <input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required className="app-field mt-1" />

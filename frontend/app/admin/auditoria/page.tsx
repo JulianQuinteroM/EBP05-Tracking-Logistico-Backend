@@ -27,7 +27,7 @@ export default function AuditPage() {
     const controller = new AbortController();
     fetch('/api/session', { cache: 'no-store' }).then(response => response.json()).then(session => {
       if (!session.authenticated) router.push('/operador/ingresar?next=/admin/auditoria');
-      else if (session.role !== 'admin') { setError('Solo el administrador puede consultar la auditoría.'); setLoading(false); }
+      else if (!session.permissions?.includes('AUDITORIA')) { setError('Tu cuenta no tiene permiso para consultar auditoría.'); setLoading(false); }
       else {
         setLoading(true);
         fetch(`/api/admin/auditoria?${appliedQuery}`, { signal: controller.signal, cache: 'no-store' })

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, PackagePlus, Search, Truck } from 'lucide-react';
+import { ArrowRight, PackagePlus, Search, MessagesSquare } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function Home() {
     <section className="grid gap-5 md:grid-cols-3" aria-label="Accesos rápidos">
       <Link href="/envios/nuevo" className="app-panel group p-7 transition hover:border-blue-500 hover:bg-[#1d2c46]"><span className="mb-5 inline-flex rounded-full bg-orange-500/15 p-4 text-orange-300"><PackagePlus /></span><h2 className="text-lg font-bold text-white">Crear nuevo envío</h2><p className="mt-2 text-sm text-slate-400">Registra un paquete, asigna prioridad y genera la guía.</p><ArrowRight className="mt-5 text-blue-300 transition group-hover:translate-x-1" size={18} /></Link>
       <Link href="/historial-operativo" className="app-panel group p-7 transition hover:border-blue-500 hover:bg-[#1d2c46]"><span className="mb-5 inline-flex rounded-full bg-slate-500/20 p-4 text-slate-300"><ArrowRight /></span><h2 className="text-lg font-bold text-white">Historial operativo</h2><p className="mt-2 text-sm text-slate-400">Consulta y gestiona los envíos almacenados.</p><ArrowRight className="mt-5 text-blue-300 transition group-hover:translate-x-1" size={18} /></Link>
-      <div className="app-panel p-7 opacity-60"><span className="mb-5 inline-flex rounded-full bg-slate-500/20 p-4 text-slate-300"><Truck /></span><h2 className="text-lg font-bold text-white">Gestión de flota</h2><p className="mt-2 text-sm text-slate-400">Módulo previsto para un sprint posterior.</p></div>
+      <Link href="/reclamaciones" className="app-panel group p-7 transition hover:border-blue-500"><span className="mb-5 inline-flex rounded-full bg-slate-500/20 p-4 text-slate-300"><MessagesSquare /></span><h2 className="text-lg font-bold text-white">Atención al cliente</h2><p className="mt-2 text-sm text-slate-400">Registra una reclamación y consulta la respuesta de nuestro equipo.</p></Link>
     </section>
   </main>;
 }

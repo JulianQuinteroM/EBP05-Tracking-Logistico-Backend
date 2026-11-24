@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InputBase from './InputBase';
+import ContactPicker from './ContactPicker';
+import type { Contact } from '@/app/contactos/page';
 import { PACKAGING_LABELS, type Estimate, type PackagingType, type ServiceType, type ShipmentDetail, type ShipmentInput } from '@/lib/types';
 
 function decimal(value: FormDataEntryValue | null, label: string, max: number) {
@@ -25,10 +27,12 @@ export default function NuevoEnvio() {
   const [pending, setPending] = useState(false);
   const [ready, setReady] = useState(false);
   const [canCreate, setCanCreate] = useState(false);
+  const [sender, setSender] = useState<Contact | null>(null);
+  const [recipient, setRecipient] = useState<Contact | null>(null);
   useEffect(() => {
     fetch('/api/session', { cache: 'no-store' }).then(response => response.json()).then(session => {
       if (!session.authenticated) router.push('/operador/ingresar?next=/envios/nuevo');
-      else if (session.role === 'viewer') { setError('La cuenta de consulta no puede crear envíos.'); setReady(true); }
+      else if (!session.permissions?.includes('ENVIO_CREAR')) { setError('Tu cuenta no tiene permiso para crear envíos.'); setReady(true); }
       else { setCanCreate(true); setReady(true); }
     }).catch(() => { setError('No se pudo comprobar la sesión.'); setReady(true); });
   }, [router]);
@@ -70,8 +74,8 @@ export default function NuevoEnvio() {
     <header><p className="text-xs font-bold uppercase tracking-widest text-blue-300">Operaciones / Nuevo envío</p><h1 className="mt-2 text-3xl font-bold text-white">Registrar nuevo envío</h1><p className="mt-2 text-slate-400">Completa los datos para generar una guía de seguimiento.</p></header>
     {error && <p role="alert" className="app-alert">{error}</p>}
     <form onSubmit={submit} className="space-y-6">
-      <Section title="Datos del remitente"><Field label="Nombre completo" name="senderName" required /><Field label="Teléfono" name="senderPhone" type="tel" required /><Field label="Correo electrónico" name="senderEmail" type="email" required /></Section>
-      <Section title="Datos del destinatario"><Field label="Nombre completo" name="recipientName" required /><Field label="Teléfono" name="recipientPhone" type="tel" required /><Field label="Correo electrónico" name="recipientEmail" type="email" required /><Field label="Calle" name="destinationStreet" required /><Field label="Número" name="destinationNumber" required /><Field label="Ciudad de destino" name="destinationCity" required /></Section>
+      <Section title="Datos del remitente"><ContactPicker onSelect={setSender} /><Field key={'sn' + sender?.id} label="Nombre completo" name="senderName" defaultValue={sender?.nombre ?? ''} required /><Field key={'sp' + sender?.id} label="Teléfono" name="senderPhone" type="tel" defaultValue={sender?.telefono ?? ''} required /><Field key={'se' + sender?.id} label="Correo electrónico" name="senderEmail" type="email" defaultValue={sender?.correo ?? ''} required /></Section>
+      <Section title="Datos del destinatario"><ContactPicker onSelect={setRecipient} /><Field key={'rn' + recipient?.id} label="Nombre completo" name="recipientName" defaultValue={recipient?.nombre ?? ''} required /><Field key={'rp' + recipient?.id} label="Teléfono" name="recipientPhone" type="tel" defaultValue={recipient?.telefono ?? ''} required /><Field key={'re' + recipient?.id} label="Correo electrónico" name="recipientEmail" type="email" defaultValue={recipient?.correo ?? ''} required /><Field label="Calle" name="destinationStreet" required /><Field label="Número" name="destinationNumber" required /><Field label="Ciudad de destino" name="destinationCity" required /></Section>
       <Section title="Datos físicos y servicio">
         <Field label="Peso (kg)" name="weightKg" placeholder="Ej. 4,50" inputMode="decimal" required />
         <Field label="Largo (cm)" name="lengthCm" placeholder="Ej. 28" inputMode="decimal" required />

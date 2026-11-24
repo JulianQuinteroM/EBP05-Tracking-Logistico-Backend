@@ -56,6 +56,13 @@ class Sprint2ApiIntegrationTest {
     }
 
     private JsonNode change(long id, long version, String status, String reason) throws Exception {
+        if(status.equals("ENTREGADO")) {
+            var image=new java.awt.image.BufferedImage(30,30,java.awt.image.BufferedImage.TYPE_INT_RGB);
+            var bytes=new java.io.ByteArrayOutputStream();javax.imageio.ImageIO.write(image,"png",bytes);
+            return json.readTree(mvc.perform(post("/api/envios/"+id+"/entrega").with(httpBasic("operador","testing-password-123456"))
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(java.util.Map.of("version",version,"receiver","Luis Ruiz","type","FOTO","mime","image/png","image",java.util.Base64.getEncoder().encodeToString(bytes.toByteArray())))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        }
         String body = json.writeValueAsString(java.util.Map.of("version", version, "status", status,
             "reason", reason == null ? "" : reason));
         return json.readTree(mvc.perform(post("/api/envios/" + id + "/estado")
@@ -107,7 +114,9 @@ class Sprint2ApiIntegrationTest {
         mvc.perform(get("/api/seguimiento/" + code))
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("INCIDENCIA"))
             .andExpect(jsonPath("$.journey[2].phase").value("ACTUAL"));
-        JsonNode resumed = change(id, incident.get("version").asLong(), "EN_TRANSITO", null);
+        JsonNode resumed = json.readTree(mvc.perform(post("/api/envios/"+id+"/incidencia").with(httpBasic("operador","testing-password-123456"))
+            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(java.util.Map.of("version",incident.get("version").asLong(),"reason","Revisión operativa completada; se puede continuar"))))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertTrue(resumed.get("allowedStatusTransitions").toString().contains("CENTRO_DISTRIBUCION"));
 
         String publicBody = mvc.perform(get("/api/seguimiento/" + code))

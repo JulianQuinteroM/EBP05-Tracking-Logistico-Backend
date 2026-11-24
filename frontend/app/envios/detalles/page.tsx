@@ -4,6 +4,7 @@ import { pageSession } from '@/lib/session';
 import { serverFetchPrivate } from '@/lib/backend';
 import { displayDate, displayNumber, PACKAGING_LABELS, serviceLabel, statusLabel, statusTone, type ShipmentDetail } from '@/lib/types';
 import ShipmentActions from './ShipmentActions';
+import ShipmentOperations from './ShipmentOperations';
 
 export default async function ShipmentDetailsPage({ searchParams }: { searchParams: Promise<{ id?: string; accion?: string; aviso?: string }> }) {
   const { id, accion, aviso } = await searchParams;
@@ -26,7 +27,8 @@ export default async function ShipmentDetailsPage({ searchParams }: { searchPara
       <Card title="Paquete y servicio"><p>Peso: {displayNumber(shipment.weightKg)} kg</p><p>Dimensiones: {displayNumber(shipment.lengthCm)} × {displayNumber(shipment.widthCm)} × {displayNumber(shipment.heightCm)} cm</p><p>Empaque: {PACKAGING_LABELS[shipment.packagingType]} {shipment.packagingDescription ? `— ${shipment.packagingDescription}` : ''}</p><p>Servicio: {serviceLabel(shipment.serviceType)}</p>{shipment.scheduledDeliveryDate && <p>Entrega programada: {shipment.scheduledDeliveryDate}</p>}<p>Entrega estimada: {detail.estimatedDeliveryDate}</p><p>Costo informativo: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(detail.estimatedCostCop)}</p></Card>
     </div>
     <Card title="Historial de movimientos">{detail.events.length ? <ol className="space-y-3">{detail.events.map((event, index) => <li key={`${event.occurredAt}-${index}`} className="border-l-2 border-blue-500 pl-4"><p className="font-semibold text-white">{event.description}</p><p>{event.previousStatus ? `${statusLabel(event.previousStatus)} → ` : ''}{statusLabel(event.resultingStatus)}{event.city ? ` · ${event.city}` : ''}{event.reference ? ` · ${event.reference}` : ''}</p><p className="text-xs text-slate-500">{displayDate(event.occurredAt)}{event.actor ? ` · ${event.actor}` : ''}</p></li>)}</ol> : <p>No hay movimientos.</p>}</Card>
-    <ShipmentActions key={`${detail.id}-${detail.version}`} detail={detail} initialAction={initialAction} canWrite={session.role !== 'viewer'} />
+    <ShipmentActions key={`${detail.id}-${detail.version}`} detail={{ ...detail, allowedStatusTransitions: session.permissions.includes('ENVIO_ESTADO') ? detail.allowedStatusTransitions.filter(s => s !== 'ENTREGADO' && detail.status !== 'INCIDENCIA') : [] }} initialAction={initialAction} canWrite={session.permissions.some(p => ['ENVIO_EDITAR','ENVIO_ESTADO'].includes(p))} permissions={session.permissions} />
+    <ShipmentOperations key={`operations-${detail.id}-${detail.version}`} detail={detail} permissions={session.permissions} />
   </main>;
 }
 function Card({ title, children }: { title: string; children: React.ReactNode }) {

@@ -34,7 +34,7 @@ class ShipmentServiceTest {
         sequence = mock(TrackingSequence.class);
         Clock clock = Clock.fixed(Instant.parse("2026-09-15T14:00:00Z"), ZoneOffset.UTC);
         service = new ShipmentService(shipments, events, audits, sequence, new ServiceEstimate(),
-            clock, new ObjectMapper(), mock(EntityManager.class));
+            clock, new ObjectMapper(), mock(EntityManager.class), mock(ContactRegistry.class));
     }
 
     private ShipmentInput input() {

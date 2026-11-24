@@ -43,6 +43,8 @@ public class Shipment {
     @Column(name = "creado_en", nullable = false) OffsetDateTime createdAt;
     @Column(name = "actualizado_en", nullable = false) OffsetDateTime updatedAt;
     @Version @Column(name = "version", nullable = false) Long version;
+    @Column(name = "remitente_contacto_id") Long senderContactId;
+    @Column(name = "destinatario_contacto_id") Long recipientContactId;
 
     protected Shipment() {}
 }
